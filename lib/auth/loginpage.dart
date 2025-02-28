@@ -192,12 +192,13 @@ class LoginPage extends StatelessWidget {
                           238,
                         ).withOpacity(0.3), // Smooth red splash
                         onTap: () async {
-                          await lgn.getKey();
+                          // Get.toNamed("/dash");
+                          lgn.login();
                           debugPrint("Pass1");
                           final token = await lgn.box.read("token");
                           debugPrint("Pass2: $token");
                           if (token != null) {
-                            Get.toNamed("/home");
+                            Get.toNamed("/dash");
                           }
                         },
                         child: Padding(

@@ -12,17 +12,18 @@ class LoginController extends GetxController {
   var usname = "".obs;
   var pass = "".obs;
 
-  void login() {
+  void login() async {
     usname.value = usernameController.text;
     pass.value = passwordController.text;
+    await getKey();
   }
 
   final _baseurl = "Constants.baseurl;";
 
   Future<dynamic> getKey() async {
     final Response res = await getcon.post("${_baseurl}auth/login/", {
-      "username": "snapeos",
-      "password": "nandu123",
+      "username": usname.value,
+      "password": pass.value,
     });
 
     if (res.statusCode == 200) {

@@ -3,16 +3,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
 
-class AddNewRecordScreen extends StatefulWidget {
-  const AddNewRecordScreen({Key? key}) : super(key: key);
-
-  @override
-  _AddNewRecordScreenState createState() => _AddNewRecordScreenState();
-}
-
-class _AddNewRecordScreenState extends State<AddNewRecordScreen> {
+class AddNewRecordScreen extends StatelessWidget {
   final _formKey = GlobalKey<FormState>();
-  DateTime _selectedDate = DateTime.now();
+  final DateTime _selectedDate = DateTime.now();
   final TextEditingController _diagnosisController = TextEditingController();
   final TextEditingController _treatmentController = TextEditingController();
   final TextEditingController _medicationsController = TextEditingController();
@@ -24,10 +17,12 @@ class _AddNewRecordScreenState extends State<AddNewRecordScreen> {
   final TextEditingController _hrController = TextEditingController();
   final TextEditingController _tempController = TextEditingController();
 
-  List<Map<String, dynamic>> _uploadedFiles = [];
+  final List<Map<String, dynamic>> _uploadedFiles = [];
 
   // For stepper functionality
   int _currentStep = 0;
+
+  AddNewRecordScreen({Key? key}) : super(key: key);
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -37,13 +32,11 @@ class _AddNewRecordScreenState extends State<AddNewRecordScreen> {
       lastDate: DateTime.now(),
     );
     if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
+      // Handle date change
     }
   }
 
-  Future<void> _pickFiles() async {
+  Future<void> _pickFiles(BuildContext context) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         allowMultiple: true,
@@ -51,15 +44,13 @@ class _AddNewRecordScreenState extends State<AddNewRecordScreen> {
       );
 
       if (result != null) {
-        setState(() {
-          for (var file in result.files) {
-            _uploadedFiles.add({
-              'name': file.name,
-              'size': '${(file.size / 1024).toStringAsFixed(2)} KB',
-              'path': file.path,
-            });
-          }
-        });
+        for (var file in result.files) {
+          _uploadedFiles.add({
+            'name': file.name,
+            'size': '${(file.size / 1024).toStringAsFixed(2)} KB',
+            'path': file.path,
+          });
+        }
       }
     } catch (e) {
       // Handle error
@@ -70,12 +61,10 @@ class _AddNewRecordScreenState extends State<AddNewRecordScreen> {
   }
 
   void _removeFile(int index) {
-    setState(() {
-      _uploadedFiles.removeAt(index);
-    });
+    _uploadedFiles.removeAt(index);
   }
 
-  void _saveRecord() {
+  void _saveRecord(BuildContext context) {
     if (_formKey.currentState!.validate()) {
       // Process data and save record
       ScaffoldMessenger.of(context).showSnackBar(
@@ -85,62 +74,70 @@ class _AddNewRecordScreenState extends State<AddNewRecordScreen> {
     }
   }
 
-  List<Step> getSteps() {
+  List<Step> getSteps(BuildContext context) {
     return [
       Step(
         title: const Text('Diagnosis'),
-        content: Column(
-          children: [
-            _buildDateField(),
-            const SizedBox(height: 16),
-            _buildDiagnosisField(),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildDateField(context),
+              const SizedBox(height: 16),
+              _buildDiagnosisField(),
+            ],
+          ),
         ),
         isActive: _currentStep >= 0,
       ),
       Step(
         title: const Text('Treatment'),
-        content: Column(
-          children: [
-            _buildTreatmentField(),
-            const SizedBox(height: 16),
-            _buildMedicationsField(),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildTreatmentField(),
+              const SizedBox(height: 16),
+              _buildMedicationsField(),
+            ],
+          ),
         ),
         isActive: _currentStep >= 1,
       ),
       Step(
         title: const Text('Lab Results & Vitals'),
-        content: Column(
-          children: [
-            _buildLabResultsField(),
-            const SizedBox(height: 16),
-            _buildVitalSignsFields(),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildLabResultsField(),
+              const SizedBox(height: 16),
+              _buildVitalSignsFields(),
+            ],
+          ),
         ),
         isActive: _currentStep >= 2,
       ),
       Step(
         title: const Text('Files & Notes'),
-        content: Column(
-          children: [
-            _buildUploadSection(),
-            const SizedBox(height: 16),
-            _buildNotesField(),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildUploadSection(context),
+              const SizedBox(height: 16),
+              _buildNotesField(),
+            ],
+          ),
         ),
         isActive: _currentStep >= 3,
       ),
     ];
   }
 
-  Widget _buildSimpleForm() {
+  Widget _buildSimpleForm(BuildContext context) {
     return Form(
       key: _formKey,
       child: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          _buildDateField(),
+          _buildDateField(context),
           const SizedBox(height: 16),
           _buildDiagnosisField(),
           const SizedBox(height: 16),
@@ -154,15 +151,15 @@ class _AddNewRecordScreenState extends State<AddNewRecordScreen> {
           const SizedBox(height: 16),
           _buildNotesField(),
           const SizedBox(height: 24),
-          _buildUploadSection(),
+          _buildUploadSection(context),
           const SizedBox(height: 32),
-          _buildActionButtons(),
+          _buildActionButtons(context),
         ],
       ),
     );
   }
 
-  Widget _buildDateField() {
+  Widget _buildDateField(BuildContext context) {
     return InkWell(
       onTap: () => _selectDate(context),
       child: InputDecorator(
@@ -301,7 +298,7 @@ class _AddNewRecordScreenState extends State<AddNewRecordScreen> {
     );
   }
 
-  Widget _buildUploadSection() {
+  Widget _buildUploadSection(BuildContext context) {
     return Card(
       elevation: 1,
       child: Padding(
@@ -315,7 +312,7 @@ class _AddNewRecordScreenState extends State<AddNewRecordScreen> {
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: _pickFiles,
+              onPressed: () => _pickFiles(context),
               icon: const Icon(Icons.upload_file),
               label: const Text('Upload Files'),
               style: ElevatedButton.styleFrom(
@@ -348,7 +345,7 @@ class _AddNewRecordScreenState extends State<AddNewRecordScreen> {
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -360,7 +357,7 @@ class _AddNewRecordScreenState extends State<AddNewRecordScreen> {
           ),
         ),
         ElevatedButton(
-          onPressed: _saveRecord,
+          onPressed: () => _saveRecord(context),
           child: const Text('Save', style: TextStyle(fontSize: 16)),
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF1A73E8),
@@ -375,7 +372,7 @@ class _AddNewRecordScreenState extends State<AddNewRecordScreen> {
   @override
   Widget build(BuildContext context) {
     // Toggle between stepper and simple form
-    bool useStepperView = true; // Set to false to use simple form
+    bool useStepperView = false; // Set to false to use simple form
 
     return Scaffold(
       appBar: AppBar(
@@ -391,27 +388,23 @@ class _AddNewRecordScreenState extends State<AddNewRecordScreen> {
                 type: StepperType.horizontal,
                 currentStep: _currentStep,
                 onStepContinue: () {
-                  final lastStepIndex = getSteps().length - 1;
+                  final lastStepIndex = getSteps(context).length - 1;
                   if (_currentStep < lastStepIndex) {
-                    setState(() {
-                      _currentStep += 1;
-                    });
+                    _currentStep += 1;
                   } else {
-                    _saveRecord();
+                    _saveRecord(context);
                   }
                 },
                 onStepCancel: () {
                   if (_currentStep > 0) {
-                    setState(() {
-                      _currentStep -= 1;
-                    });
+                    _currentStep -= 1;
                   } else {
                     Navigator.pop(context);
                   }
                 },
-                steps: getSteps(),
+                steps: getSteps(context),
                 controlsBuilder: (context, details) {
-                  final lastStepIndex = getSteps().length - 1;
+                  final lastStepIndex = getSteps(context).length - 1;
                   return Padding(
                     padding: const EdgeInsets.only(top: 20),
                     child: Row(
@@ -437,20 +430,7 @@ class _AddNewRecordScreenState extends State<AddNewRecordScreen> {
                   );
                 },
               )
-              : _buildSimpleForm(),
+              : _buildSimpleForm(context),
     );
-  }
-
-  @override
-  void dispose() {
-    _diagnosisController.dispose();
-    _treatmentController.dispose();
-    _medicationsController.dispose();
-    _labResultsController.dispose();
-    _notesController.dispose();
-    _bpController.dispose();
-    _hrController.dispose();
-    _tempController.dispose();
-    super.dispose();
   }
 }

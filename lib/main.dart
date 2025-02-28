@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: "/dash", page: () => const DashBoard()),
 
         GetPage(name: "/pp", page: () => const PatientProfile()),
-        GetPage(name: "/anrc", page: () => const AddNewRecordScreen()),
+        GetPage(name: "/anrc", page: () => AddNewRecordScreen()),
 
         GetPage(
           name: "/chronic",
