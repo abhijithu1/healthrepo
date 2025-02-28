@@ -1,11 +1,17 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:helthrepov1/dashctrl.dart';
 
 class DashBoard extends StatelessWidget {
   const DashBoard({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final dash = Get.find<DashBoardController>();
+    final patientlist = dash.getPatients();
     return MaterialApp(
       title: 'Doctor Dashboard',
       theme: ThemeData(
@@ -177,6 +183,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
         'title': 'Add New Patient',
         'onTap': () {
           // Navigate to add patient screen
+          Get.toNamed("/addnp");
         },
       },
       {
@@ -265,39 +272,44 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
     );
   }
 
+  // Generate a random last visit date
+  String _getRandomLastVisit() {
+    final random = Random();
+    final day = random.nextInt(28) + 1; // Random day between 1 and 28
+    final month = random.nextInt(12) + 1; // Random month between 1 and 12
+    final year = 2023; // Fixed year
+    return '$day/$month/$year';
+  }
+
+  // Generate a random condition
+  String _getRandomCondition() {
+    final conditions = ['Diabetes', 'Hypertension', 'Asthma', 'Arthritis'];
+    final random = Random();
+    return conditions[random.nextInt(conditions.length)];
+  }
+
+  // Generate a random color
+  Color _getRandomColor() {
+    final colors = [Colors.green, Colors.blue, Colors.purple, Colors.orange];
+    final random = Random();
+    return colors[random.nextInt(colors.length)];
+  }
+
+  // Extract initials from the name
+  String _getInitials(String name) {
+    final names = name.split(' ');
+    if (names.length >= 2) {
+      return '${names[0][0]}${names[1][0]}';
+    } else if (names.isNotEmpty) {
+      return names[0][0];
+    }
+    return '';
+  }
+
   // 4. Recent Patients
   Widget _buildRecentPatients() {
-    // Sample patient data
-    final List<Map<String, dynamic>> recentPatients = [
-      {
-        'name': 'John Doe',
-        'lastVisit': '12 Oct 2023',
-        'condition': 'Diabetes',
-        'conditionColor': Colors.green,
-        'initials': 'JD',
-      },
-      {
-        'name': 'Emily Smith',
-        'lastVisit': '10 Oct 2023',
-        'condition': 'Hypertension',
-        'conditionColor': Colors.blue,
-        'initials': 'ES',
-      },
-      {
-        'name': 'Michael Brown',
-        'lastVisit': '5 Oct 2023',
-        'condition': 'Asthma',
-        'conditionColor': Colors.purple,
-        'initials': 'MB',
-      },
-      {
-        'name': 'Sarah Johnson',
-        'lastVisit': '2 Oct 2023',
-        'condition': 'Arthritis',
-        'conditionColor': Colors.orange,
-        'initials': 'SJ',
-      },
-    ];
+    // Retrieve the patient list from the backend
+    final dash = Get.find<DashBoardController>();
 
     return Expanded(
       child: Column(
@@ -330,80 +342,107 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: ListView.builder(
-              itemCount: recentPatients.length,
-              itemBuilder: (context, index) {
-                final patient = recentPatients[index];
-                return GestureDetector(
-                  onTap: () => Get.toNamed("/pp"),
-                  child: Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundColor: Colors.grey.shade200,
-                            child: Text(
-                              patient['initials'],
-                              style: TextStyle(
-                                color: Theme.of(context).primaryColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+            child: FutureBuilder<List<dynamic>>(
+              future: dash.getPatients(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No patients found.'));
+                } else {
+                  final patientlist = snapshot.data!;
+                  final List<Map<String, dynamic>> recentPatients =
+                      patientlist.map((patient) {
+                        return {
+                          'name': patient['name'],
+                          'lastVisit': _getRandomLastVisit(),
+                          'condition': _getRandomCondition(),
+                          'conditionColor': _getRandomColor(),
+                          'initials': _getInitials(patient['name']),
+                        };
+                      }).toList();
+
+                  return ListView.builder(
+                    itemCount: recentPatients.length,
+                    itemBuilder: (context, index) {
+                      final patient = recentPatients[index];
+                      return GestureDetector(
+                        onTap: () => Get.toNamed("/pp"),
+                        child: Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                          elevation: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Row(
                               children: [
-                                Text(
-                                  patient['name'],
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF202124),
+                                CircleAvatar(
+                                  radius: 24,
+                                  backgroundColor: Colors.grey.shade200,
+                                  child: Text(
+                                    patient['initials'],
+                                    style: TextStyle(
+                                      color: Theme.of(context).primaryColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Last Visit: ${patient['lastVisit']}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        patient['name'],
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF202124),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Last Visit: ${patient['lastVisit']}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: patient['conditionColor']
+                                        .withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    patient['condition'],
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: patient['conditionColor'],
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: patient['conditionColor'].withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              patient['condition'],
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: patient['conditionColor'],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
+                        ),
+                      );
+                    },
+                  );
+                }
               },
             ),
           ),
@@ -438,7 +477,12 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
             ],
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
+          onTap: () async {
+            final box = GetStorage();
+            await box.remove("token");
+            Get.offAllNamed("/login");
+          },
           value: 'logout',
           child: Row(
             children: [
