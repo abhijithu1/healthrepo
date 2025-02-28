@@ -475,7 +475,10 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
             ],
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
+          onTap: () {
+            Get.toNamed("/setbase");
+          },
           value: 'settings',
           child: Row(
             children: [

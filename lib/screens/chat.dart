@@ -6,14 +6,6 @@ import 'package:intl/intl.dart';
 import 'package:helthrepov1/constant.dart';
 import 'package:file_picker/file_picker.dart';
 
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
-import 'package:helthrepov1/controllers/dashctrl.dart';
-import 'package:intl/intl.dart';
-import 'package:helthrepov1/constant.dart';
-import 'package:file_picker/file_picker.dart';
-
 class ChatController extends GetxController {
   final GetConnect getcon = GetConnect(
     allowAutoSignedCert:
@@ -27,13 +19,25 @@ class ChatController extends GetxController {
   final RxList<ChatMessage> messages = <ChatMessage>[].obs;
   final Rx<Patient?> selectedPatient = Rx<Patient?>(null);
   final RxList<Patient> patients = <Patient>[].obs;
+  final RxList<Patient> filteredPatients = <Patient>[].obs;
   final RxBool isSearching = false.obs;
+  final RxString searchQuery = ''.obs;
 
   @override
   void onInit() {
     super.onInit();
     // Load patients from the backend API
     loadPatients();
+
+    // Initialize filtered patients with all patients
+    ever(patients, (_) {
+      filteredPatients.value = patients;
+    });
+
+    // Add listener to searchQuery to filter patients when search text changes
+    ever(searchQuery, (_) {
+      filterPatients();
+    });
   }
 
   void loadPatients() async {
@@ -54,11 +58,37 @@ class ChatController extends GetxController {
 
   void toggleSearch() {
     isSearching.value = !isSearching.value;
+    if (!isSearching.value) {
+      // Clear search when closing
+      searchQuery.value = '';
+    }
+  }
+
+  void filterPatients() {
+    if (searchQuery.value.isEmpty) {
+      filteredPatients.value = patients;
+    } else {
+      filteredPatients.value =
+          patients
+              .where(
+                (patient) =>
+                    patient.name.toLowerCase().contains(
+                      searchQuery.value.toLowerCase(),
+                    ) ||
+                    patient.id.toString().contains(searchQuery.value),
+              )
+              .toList();
+    }
+  }
+
+  void updateSearchQuery(String query) {
+    searchQuery.value = query;
   }
 
   void selectPatient(Patient patient) {
     selectedPatient.value = patient;
     isSearching.value = false;
+    searchQuery.value = '';
     // In a real app, fetch chat history for this patient
     messages.clear();
   }
@@ -73,7 +103,7 @@ class ChatController extends GetxController {
       timestamp: DateTime.now(),
     );
     messages.add(userMessage);
-    messageText.value = '';
+    messageText.value = ''; // Clear the text field
 
     // Show AI is typing
     isAiTyping.value = true;
@@ -181,6 +211,8 @@ class ChatMessage {
 class AiChatScreen extends StatelessWidget {
   final ChatController controller = Get.put(ChatController());
   final FocusNode _focusNode = FocusNode();
+  final TextEditingController _textController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   AiChatScreen({Key? key}) : super(key: key);
 
@@ -240,25 +272,14 @@ class AiChatScreen extends StatelessWidget {
       color: Colors.white,
       child: Column(
         children: [
-          // Search Bar (now just toggles patient list)
+          // Search Bar
           InkWell(
             onTap: () => controller.toggleSearch(),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.grey.shade100,
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.search, color: Colors.grey.shade600),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Search patients',
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
-                ],
-              ),
+            child: Obx(
+              () =>
+                  controller.isSearching.value
+                      ? _buildActiveSearchBar()
+                      : _buildInactiveSearchBar(),
             ),
           ),
 
@@ -274,43 +295,137 @@ class AiChatScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPatientList() {
+  Widget _buildInactiveSearchBar() {
     return Container(
-      constraints: const BoxConstraints(maxHeight: 250),
-      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade200,
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+        color: Colors.grey.shade100,
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.search, color: Colors.grey.shade600),
+          const SizedBox(width: 8),
+          Text(
+            'Search patients',
+            style: TextStyle(color: Colors.grey.shade600),
           ),
         ],
       ),
-      child: ListView.separated(
-        shrinkWrap: true,
-        itemCount: controller.patients.length,
-        separatorBuilder: (context, index) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          final patient = controller.patients[index];
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Theme.of(context).primaryColor,
-              child: Text(patient.profilePic),
+    );
+  }
+
+  Widget _buildActiveSearchBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.grey.shade100,
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.search, color: Colors.grey.shade600),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              autofocus: true,
+              decoration: const InputDecoration(
+                hintText: 'Search by name or ID',
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 12),
+              ),
+              onChanged: (value) {
+                controller.updateSearchQuery(value);
+              },
             ),
-            title: Text(
-              patient.name,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          if (_searchController.text.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: () {
+                _searchController.clear();
+                controller.updateSearchQuery('');
+              },
             ),
-            subtitle: Text('ID: ${patient.id}'),
-            onTap: () {
-              controller.selectPatient(patient);
-              FocusScope.of(context).unfocus();
-            },
-          );
-        },
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPatientList() {
+    return Obx(() {
+      final patients = controller.filteredPatients;
+
+      return Container(
+        constraints: const BoxConstraints(maxHeight: 250),
+        margin: const EdgeInsets.only(top: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.shade200,
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child:
+            patients.isEmpty
+                ? _buildNoResultsFound()
+                : ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: patients.length,
+                  separatorBuilder:
+                      (context, index) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final patient = patients[index];
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        child: Text(
+                          patient.name.isNotEmpty
+                              ? patient.name[0].toUpperCase()
+                              : '?',
+                        ),
+                      ),
+                      title: Text(
+                        patient.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text('ID: ${patient.id}'),
+                      onTap: () {
+                        controller.selectPatient(patient);
+                        FocusScope.of(context).unfocus();
+                      },
+                    );
+                  },
+                ),
+      );
+    });
+  }
+
+  Widget _buildNoResultsFound() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.search_off, size: 48, color: Colors.grey.shade400),
+          const SizedBox(height: 12),
+          Text(
+            'No patients found',
+            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Try searching with a different name or ID',
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
@@ -337,7 +452,14 @@ class AiChatScreen extends StatelessWidget {
                               backgroundColor: Get.theme.primaryColor,
                               radius: 16,
                               child: Text(
-                                controller.selectedPatient.value!.profilePic,
+                                controller
+                                        .selectedPatient
+                                        .value!
+                                        .name
+                                        .isNotEmpty
+                                    ? controller.selectedPatient.value!.name[0]
+                                        .toUpperCase()
+                                    : '?',
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -425,6 +547,56 @@ class AiChatScreen extends StatelessWidget {
     );
   }
 
+  // Helper function to format text with markdown-like syntax
+  List<TextSpan> _formatText(String text) {
+    List<TextSpan> spans = [];
+
+    // Split the text by the bold pattern (**text**)
+    RegExp boldRegExp = RegExp(r'\*\*(.*?)\*\*');
+
+    // Keep track of where we are in the original string
+    int lastMatchEnd = 0;
+
+    // Find all bold matches
+    for (Match match in boldRegExp.allMatches(text)) {
+      // Add any text before this match
+      if (match.start > lastMatchEnd) {
+        spans.add(
+          TextSpan(
+            text: text.substring(lastMatchEnd, match.start),
+            style: const TextStyle(color: Colors.white),
+          ),
+        );
+      }
+
+      // Add the bold text (without the ** markers)
+      spans.add(
+        TextSpan(
+          text: match.group(1), // The text between ** and **
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+
+      // Update the lastMatchEnd
+      lastMatchEnd = match.end;
+    }
+
+    // Add any remaining text after the last match
+    if (lastMatchEnd < text.length) {
+      spans.add(
+        TextSpan(
+          text: text.substring(lastMatchEnd),
+          style: const TextStyle(color: Colors.white),
+        ),
+      );
+    }
+
+    return spans;
+  }
+
   Widget _buildMessageBubble(ChatMessage message) {
     final isFromUser = message.isFromUser;
     final formatter = DateFormat('h:mm a');
@@ -450,9 +622,19 @@ class AiChatScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    message.text,
-                    style: const TextStyle(color: Colors.white),
+                  // Use RichText for formatted message content
+                  RichText(
+                    text: TextSpan(
+                      children:
+                          isFromUser
+                              ? [
+                                TextSpan(
+                                  text: message.text,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ]
+                              : _formatText(message.text),
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -493,29 +675,41 @@ class AiChatScreen extends StatelessWidget {
 
           // Text Input
           Expanded(
-            child: TextField(
-              focusNode: _focusNode,
-              onChanged: (value) => controller.messageText.value = value,
-              onSubmitted: (value) {
-                if (value.trim().isNotEmpty) {
-                  controller.sendMessage(value);
-                  _focusNode.requestFocus();
-                }
-              },
-              decoration: InputDecoration(
-                hintText: 'Type a message...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
+            child: Obx(() {
+              // Update TextEditingController when messageText changes
+              _textController.text = controller.messageText.value;
+              // Maintain cursor position at the end
+              _textController.selection = TextSelection.fromPosition(
+                TextPosition(offset: _textController.text.length),
+              );
+
+              return TextField(
+                controller: _textController,
+                focusNode: _focusNode,
+                onChanged: (value) => controller.messageText.value = value,
+                onSubmitted: (value) {
+                  if (value.trim().isNotEmpty) {
+                    controller.sendMessage(value);
+                    _textController
+                        .clear(); // Clear text controller after sending
+                    _focusNode.requestFocus();
+                  }
+                },
+                decoration: InputDecoration(
+                  hintText: 'Type a message...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                 ),
-                filled: true,
-                fillColor: Colors.grey.shade100,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-              ),
-            ),
+              );
+            }),
           ),
 
           // Send Button
@@ -527,6 +721,8 @@ class AiChatScreen extends StatelessWidget {
                       ? null
                       : () {
                         controller.sendMessage(controller.messageText.value);
+                        _textController
+                            .clear(); // Clear text controller after sending
                         _focusNode.requestFocus();
                       },
               color:

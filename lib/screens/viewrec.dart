@@ -392,7 +392,9 @@ class SearchScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dsb = Get.find<DashBoardController>();
-    // final res = dsb.getPatients();
+    final searchController = TextEditingController();
+    final searchQuery = ''.obs;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -427,6 +429,7 @@ class SearchScreen extends StatelessWidget {
                 ],
               ),
               child: TextField(
+                controller: searchController,
                 decoration: InputDecoration(
                   hintText: "Search patients by name or ABHA ID",
                   prefixIcon: const Icon(Icons.search),
@@ -435,13 +438,22 @@ class SearchScreen extends StatelessWidget {
                     vertical: 15,
                     horizontal: 16,
                   ),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () {
-                      // Clear search functionality will be implemented later
-                    },
+                  suffixIcon: Obx(
+                    () =>
+                        searchQuery.value.isNotEmpty
+                            ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                searchController.clear();
+                                searchQuery.value = '';
+                              },
+                            )
+                            : const SizedBox.shrink(),
                   ),
                 ),
+                onChanged: (value) {
+                  searchQuery.value = value.trim();
+                },
               ),
             ),
 
@@ -459,38 +471,54 @@ class SearchScreen extends StatelessWidget {
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                     return const Center(child: Text('No patients found.'));
                   } else {
-                    final patientlist = snapshot.data!;
-                    return ListView.builder(
-                      itemCount: patientlist.length,
-                      itemBuilder: (BuildContext context, index) {
-                        return ListTile(
-                          onTap: () async {
-                            final vrcc = Get.find<ViewRecController>();
-                            vrcc.name.value = patientlist[index]['name'];
-                            vrcc.id.value = patientlist[index]['id'];
+                    final patientList = snapshot.data!;
+                    return Obx(() {
+                      final query = searchQuery.value.toLowerCase();
+                      final filteredPatients =
+                          query.isEmpty
+                              ? patientList
+                              : patientList.where((patient) {
+                                final name =
+                                    patient['name'].toString().toLowerCase();
+                                final id =
+                                    patient['id'].toString().toLowerCase();
+                                return name.contains(query) ||
+                                    id.contains(query);
+                              }).toList();
 
-                            Get.back(result: true);
-                          },
-                          title: Text(patientlist[index]['name']),
+                      if (filteredPatients.isEmpty) {
+                        return Center(
+                          child: Text('No patients match "$query"'),
                         );
-                      },
-                    );
+                      }
+
+                      return ListView.builder(
+                        itemCount: filteredPatients.length,
+                        itemBuilder: (BuildContext context, index) {
+                          final patient = filteredPatients[index];
+                          final name = patient['name'];
+                          final id = patient['id'];
+
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.blue.shade100,
+                              child: Text(name[0]), // First letter of name
+                            ),
+                            title: Text(name),
+                            subtitle: Text("ID: $id"),
+                            onTap: () {
+                              final vrcc = Get.find<ViewRecController>();
+                              vrcc.name.value = name;
+                              vrcc.id.value = id;
+                              Get.back(result: true);
+                            },
+                          );
+                        },
+                      );
+                    });
                   }
                 },
               ),
-              // child: ListView.builder(
-              //   itemCount: searchResults.length,
-              //   itemBuilder: (context, index) {
-              //     final result = searchResults[index];
-              //     return ListTile(
-              //       title: Text(result['name']),
-              //       // subtitle: Text(result['summary']),
-              //       onTap: () {
-              //         // Handle tap on search result
-              //       },
-              //     );
-              //   },
-              // ),
             ),
           ],
         ),
