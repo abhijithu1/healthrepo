@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:helthrepov1/controllers/dashctrl.dart';
 import 'package:helthrepov1/controllers/viewrecctrl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ViewRecordsScreen extends StatelessWidget {
   const ViewRecordsScreen({Key? key}) : super(key: key);
@@ -137,6 +138,7 @@ class ViewRecordsScreen extends StatelessWidget {
                             type: rr['record_type'],
                             date: rr['date'],
                             summary: rr['summary'],
+                            url: rr["url"],
                             hasAttachments: true,
                             context: context,
                           );
@@ -181,6 +183,7 @@ class ViewRecordsScreen extends StatelessWidget {
   Widget _buildRecordCard({
     required String type,
     required String date,
+    required String url,
     required String summary,
     required bool hasAttachments,
     required BuildContext context,
@@ -230,16 +233,17 @@ class ViewRecordsScreen extends StatelessWidget {
                 ),
                 if (hasAttachments)
                   TextButton(
-                    onPressed: () {
+                    onPressed: () async {
                       // Download functionality will be implemented later
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            "Download functionality will be implemented later",
-                          ),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
+                      Uri uri = Uri.parse(url);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(
+                          uri,
+                          mode: LaunchMode.externalApplication,
+                        );
+                      } else {
+                        print('Could not launch $url');
+                      }
                     },
                     child: const Row(
                       children: [
@@ -330,14 +334,6 @@ class ViewRecordsScreen extends StatelessWidget {
                               icon: const Icon(Icons.download),
                               onPressed: () {
                                 // Download functionality will be implemented later
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      "Download functionality will be implemented later",
-                                    ),
-                                    duration: Duration(seconds: 2),
-                                  ),
-                                );
                               },
                             ),
                           ),

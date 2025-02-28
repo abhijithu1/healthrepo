@@ -6,6 +6,7 @@ import 'package:helthrepov1/screens/addnewpatient.dart';
 import 'package:helthrepov1/screens/addnewrec.dart';
 import 'package:helthrepov1/screens/alertnot.dart';
 import 'package:helthrepov1/controllers/authctrl.dart';
+import 'package:helthrepov1/screens/chat.dart';
 import 'package:helthrepov1/screens/loginpage.dart';
 import 'package:helthrepov1/screens/chronic.dart';
 import 'package:helthrepov1/screens/dashb.dart';
@@ -46,10 +47,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: "/pp", page: () => const PatientProfile()),
         GetPage(name: "/anrc", page: () => AddNewRecordScreen()),
 
-        GetPage(
-          name: "/chronic",
-          page: () => const ChronicConditionMonitoringScreen(),
-        ),
+        GetPage(name: "/chat", page: () => AiChatScreen()),
         GetPage(
           name: "/alert",
           page: () => const AlertsAndNotificationsScreen(),

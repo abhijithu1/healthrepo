@@ -196,11 +196,11 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
         },
       },
       {
-        'icon': Icons.monitor_heart,
-        'title': 'Chronic Condition Monitoring',
+        'icon': Icons.message_rounded,
+        'title': 'AI chat',
         'onTap': () {
           // Navigate to monitoring screen
-          Get.toNamed("/chronic");
+          Get.toNamed("/chat");
         },
       },
       {
