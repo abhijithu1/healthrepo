@@ -29,6 +29,17 @@ class ViewRecordsScreen extends StatelessWidget {
         centerTitle: true,
         backgroundColor: const Color(0xFF1A73E8), // Google Blue
         elevation: 2,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add, color: Colors.white),
+            onPressed: () {
+              // Add functionality to navigate to the screen where you can add new records
+              // For example:
+              // Get.to(AddRecordScreen());
+              Get.toNamed("/chat");
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
