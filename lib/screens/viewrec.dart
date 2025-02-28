@@ -13,14 +13,18 @@ class ViewRecordsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
         title: const Text(
           "View Records",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+          ),
         ),
         centerTitle: true,
         backgroundColor: const Color(0xFF1A73E8), // Google Blue
@@ -35,26 +39,27 @@ class ViewRecordsScreen extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
               child: TextField(
                 decoration: InputDecoration(
                   hintText: "Search patients by name or ABHA ID",
-                  prefixIcon: const Icon(Icons.search),
+                  hintStyle: TextStyle(color: Colors.grey.shade400),
+                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
                     vertical: 15,
                     horizontal: 16,
                   ),
                   suffixIcon: IconButton(
-                    icon: const Icon(Icons.clear),
+                    icon: const Icon(Icons.clear, color: Colors.grey),
                     onPressed: () {
                       // Clear search functionality will be implemented later
                     },
@@ -76,9 +81,15 @@ class ViewRecordsScreen extends StatelessWidget {
               child: Row(
                 children: [
                   CircleAvatar(
-                    radius: 20,
+                    radius: 24,
                     backgroundColor: Colors.blue.shade100,
-                    child: const Text("J"), // Placeholder initial
+                    child: const Text(
+                      "J",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ), // Placeholder initial
                   ),
                   const SizedBox(width: 12),
                   Column(
@@ -87,7 +98,7 @@ class ViewRecordsScreen extends StatelessWidget {
                       Obx(
                         () => Text(
                           vrcc.name.value, // Placeholder name
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
                           ),
@@ -139,6 +150,7 @@ class ViewRecordsScreen extends StatelessWidget {
                             date: rr['date'],
                             summary: rr['summary'],
                             url: rr["url"],
+                            name: rr["name"],
                             hasAttachments: true,
                             context: context,
                           );
@@ -148,31 +160,6 @@ class ViewRecordsScreen extends StatelessWidget {
                   },
                 );
               }),
-              // child: ListView(
-              //   children: [
-              //     _buildRecordCard(
-              //       type: "Lab Report",
-              //       date: "15 Oct 2023",
-              //       summary: "Blood Sugar Level: 250 mg/dL",
-              //       hasAttachments: true,
-              //       context: context,
-              //     ),
-              //     _buildRecordCard(
-              //       type: "Diagnosis",
-              //       date: "20 Sep 2023",
-              //       summary: "Type 2 Diabetes",
-              //       hasAttachments: false,
-              //       context: context,
-              //     ),
-              //     _buildRecordCard(
-              //       type: "Treatment",
-              //       date: "10 Oct 2023",
-              //       summary: "Physiotherapy for lower back pain",
-              //       hasAttachments: true,
-              //       context: context,
-              //     ),
-              //   ],
-              // ),
             ),
           ],
         ),
@@ -183,6 +170,7 @@ class ViewRecordsScreen extends StatelessWidget {
   Widget _buildRecordCard({
     required String type,
     required String date,
+    required String name,
     required String url,
     required String summary,
     required bool hasAttachments,
@@ -190,8 +178,8 @@ class ViewRecordsScreen extends StatelessWidget {
   }) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -201,7 +189,7 @@ class ViewRecordsScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  type,
+                  name,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -212,6 +200,11 @@ class ViewRecordsScreen extends StatelessWidget {
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                 ),
               ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              type,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Text(summary, style: const TextStyle(fontSize: 15)),
@@ -398,14 +391,18 @@ class SearchScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
         title: const Text(
           "Search Patients",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+          ),
         ),
         centerTitle: true,
         backgroundColor: const Color(0xFF1A73E8), // Google Blue
@@ -419,12 +416,12 @@ class SearchScreen extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
@@ -432,7 +429,8 @@ class SearchScreen extends StatelessWidget {
                 controller: searchController,
                 decoration: InputDecoration(
                   hintText: "Search patients by name or ABHA ID",
-                  prefixIcon: const Icon(Icons.search),
+                  hintStyle: TextStyle(color: Colors.grey.shade400),
+                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
                     vertical: 15,
@@ -442,7 +440,7 @@ class SearchScreen extends StatelessWidget {
                     () =>
                         searchQuery.value.isNotEmpty
                             ? IconButton(
-                              icon: const Icon(Icons.clear),
+                              icon: const Icon(Icons.clear, color: Colors.grey),
                               onPressed: () {
                                 searchController.clear();
                                 searchQuery.value = '';
@@ -526,5 +524,3 @@ class SearchScreen extends StatelessWidget {
     );
   }
 }
-
-// Mock data for search results

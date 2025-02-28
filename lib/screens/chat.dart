@@ -228,23 +228,88 @@ class AiChatScreen extends StatelessWidget {
         centerTitle: true,
         elevation: 1,
       ),
-      body: Column(
-        children: [
-          // Patient Selection Section
-          _buildPatientSelection(),
-
-          // Divider
-          const Divider(height: 1),
-
-          // Chat Window
-          Obx(
-            () =>
-                controller.selectedPatient.value == null
-                    ? _buildNoPatientSelectedView()
-                    : _buildChatWindow(),
-          ),
-        ],
+      body: Obx(
+        () =>
+            controller.isSearching.value
+                ? _buildFullScreenSearch(context)
+                : _buildRegularChatScreen(),
       ),
+    );
+  }
+
+  Widget _buildFullScreenSearch(BuildContext context) {
+    // This creates a full-screen search view
+    return Column(
+      children: [
+        // Search Bar at the top
+        Container(
+          padding: const EdgeInsets.all(8),
+          color: Colors.white,
+          child: _buildActiveSearchBar(),
+        ),
+
+        // Patient List takes the remaining space
+        Expanded(
+          child: Obx(() {
+            final patients = controller.filteredPatients;
+            return Container(
+              color: Colors.white,
+              child:
+                  patients.isEmpty
+                      ? _buildNoResultsFound()
+                      : ListView.separated(
+                        itemCount: patients.length,
+                        separatorBuilder:
+                            (context, index) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final patient = patients[index];
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Theme.of(context).primaryColor,
+                              child: Text(
+                                patient.name.isNotEmpty
+                                    ? patient.name[0].toUpperCase()
+                                    : '?',
+                              ),
+                            ),
+                            title: Text(
+                              patient.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text('ID: ${patient.id}'),
+                            onTap: () {
+                              controller.selectPatient(patient);
+                              FocusScope.of(context).unfocus();
+                            },
+                          );
+                        },
+                      ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRegularChatScreen() {
+    return Column(
+      children: [
+        // Patient Selection Section
+        _buildPatientSelection(),
+
+        // Divider
+        const Divider(height: 1),
+
+        // Chat Window
+        Obx(
+          () =>
+              controller.selectedPatient.value == null
+                  ? _buildNoPatientSelectedView()
+                  : _buildChatWindow(),
+        ),
+      ],
     );
   }
 
@@ -270,27 +335,9 @@ class AiChatScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       color: Colors.white,
-      child: Column(
-        children: [
-          // Search Bar
-          InkWell(
-            onTap: () => controller.toggleSearch(),
-            child: Obx(
-              () =>
-                  controller.isSearching.value
-                      ? _buildActiveSearchBar()
-                      : _buildInactiveSearchBar(),
-            ),
-          ),
-
-          // Patient List
-          Obx(
-            () =>
-                controller.isSearching.value
-                    ? _buildPatientList()
-                    : const SizedBox.shrink(),
-          ),
-        ],
+      child: InkWell(
+        onTap: () => controller.toggleSearch(),
+        child: _buildInactiveSearchBar(),
       ),
     );
   }
@@ -348,62 +395,13 @@ class AiChatScreen extends StatelessWidget {
                 controller.updateSearchQuery('');
               },
             ),
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => controller.toggleSearch(),
+          ),
         ],
       ),
     );
-  }
-
-  Widget _buildPatientList() {
-    return Obx(() {
-      final patients = controller.filteredPatients;
-
-      return Container(
-        constraints: const BoxConstraints(maxHeight: 250),
-        margin: const EdgeInsets.only(top: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.shade200,
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child:
-            patients.isEmpty
-                ? _buildNoResultsFound()
-                : ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: patients.length,
-                  separatorBuilder:
-                      (context, index) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final patient = patients[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        child: Text(
-                          patient.name.isNotEmpty
-                              ? patient.name[0].toUpperCase()
-                              : '?',
-                        ),
-                      ),
-                      title: Text(
-                        patient.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text('ID: ${patient.id}'),
-                      onTap: () {
-                        controller.selectPatient(patient);
-                        FocusScope.of(context).unfocus();
-                      },
-                    );
-                  },
-                ),
-      );
-    });
   }
 
   Widget _buildNoResultsFound() {

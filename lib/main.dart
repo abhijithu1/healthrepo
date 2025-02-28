@@ -14,6 +14,7 @@ import 'package:helthrepov1/controllers/dashctrl.dart';
 import 'package:helthrepov1/controllers/newpatientctrl.dart';
 import 'package:helthrepov1/screens/patientprofile.dart';
 import 'package:helthrepov1/controllers/profilectrl.dart';
+import 'package:helthrepov1/screens/plist.dart';
 import 'package:helthrepov1/screens/settings.dart';
 import 'package:helthrepov1/screens/viewrec.dart';
 
@@ -56,6 +57,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: "/addnp", page: () => const AddNewPatientScreen()),
         GetPage(name: "/viewrec", page: () => const ViewRecordsScreen()),
         GetPage(name: "/setbase", page: () => const SettingScreen()),
+        GetPage(name: "/viewpat", page: () => PatientListScreen()),
       ],
     );
   }

@@ -188,10 +188,10 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
         },
       },
       {
-        'icon': Icons.folder_open,
-        'title': 'View Records',
+        'icon': Icons.people,
+        'title': 'View Patients',
         'onTap': () {
-          Get.toNamed("/viewrec");
+          Get.toNamed("/viewpat");
           // Navigate to records screen
         },
       },

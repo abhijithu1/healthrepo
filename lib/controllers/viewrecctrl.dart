@@ -12,6 +12,7 @@ class ViewRecController extends GetxController {
 
   final _baseurl = Constants.baseurl;
   final id = 1.obs;
+
   final name = "john Doe".obs;
 
   Future<List<dynamic>> getRecords() async {
