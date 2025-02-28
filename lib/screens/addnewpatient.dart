@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:helthrepov1/dashctrl.dart';
-import 'package:helthrepov1/newpatientctrl.dart';
+import 'package:helthrepov1/controllers/dashctrl.dart';
+import 'package:helthrepov1/controllers/newpatientctrl.dart';
 import 'package:intl/intl.dart';
 
 class AddNewPatientScreen extends StatelessWidget {

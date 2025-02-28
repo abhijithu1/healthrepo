@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:get/get.dart';
+import 'package:helthrepov1/controllers/profilectrl.dart';
 
 class PatientProfile extends StatelessWidget {
   const PatientProfile({Key? key}) : super(key: key);
@@ -1139,6 +1140,7 @@ class PatientInfoHeader extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
+    final prfc = Get.find<ProfileController>();
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -1153,9 +1155,9 @@ class PatientInfoHeader extends SliverPersistentHeaderDelegate {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
+            children: [
               Text(
-                'John Doe',
+                prfc.name.value,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -1164,7 +1166,7 @@ class PatientInfoHeader extends SliverPersistentHeaderDelegate {
               ),
               SizedBox(height: 4),
               Text(
-                'Patient ID: 123456',
+                'Patient ID: ${prfc.id.value}',
                 style: TextStyle(fontSize: 14, color: Colors.grey),
               ),
             ],

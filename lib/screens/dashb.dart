@@ -3,7 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:helthrepov1/dashctrl.dart';
+import 'package:helthrepov1/controllers/dashctrl.dart';
+import 'package:helthrepov1/controllers/profilectrl.dart';
 
 class DashBoard extends StatelessWidget {
   const DashBoard({Key? key}) : super(key: key);
@@ -190,6 +191,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
         'icon': Icons.folder_open,
         'title': 'View Records',
         'onTap': () {
+          Get.toNamed("/viewrec");
           // Navigate to records screen
         },
       },
@@ -357,6 +359,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                       patientlist.map((patient) {
                         return {
                           'name': patient['name'],
+                          'id': patient['id'],
                           'lastVisit': _getRandomLastVisit(),
                           'condition': _getRandomCondition(),
                           'conditionColor': _getRandomColor(),
@@ -369,7 +372,12 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                     itemBuilder: (context, index) {
                       final patient = recentPatients[index];
                       return GestureDetector(
-                        onTap: () => Get.toNamed("/pp"),
+                        onTap: () {
+                          final pp = Get.find<ProfileController>();
+                          pp.id.value = recentPatients[index]['id'];
+                          pp.name.value = patient['name'];
+                          Get.toNamed("/pp");
+                        },
                         child: Card(
                           margin: const EdgeInsets.only(bottom: 12),
                           shape: RoundedRectangleBorder(
