@@ -8,20 +8,32 @@ class AddNewRecordScreen extends StatelessWidget {
 
   void _saveRecord(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
-      // Show loading animation
+      // Show loading animation with the custom GIF
       Get.dialog(
-        Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/loading.gif', // Ensure you have a loading GIF in assets
-                width: 100,
-                height: 100,
-              ),
-              const SizedBox(height: 10),
-              const Text("Saving record...", style: TextStyle(fontSize: 16)),
-            ],
+        Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/loadgif.gif', // Using the provided GIF path
+                  width: 120,
+                  height: 120,
+                ),
+                const SizedBox(height: 15),
+                const Text(
+                  "Saving record...",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
           ),
         ),
         barrierDismissible: false,
@@ -32,7 +44,17 @@ class AddNewRecordScreen extends StatelessWidget {
       Get.back(); // Navigate back after success
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Record saved successfully')),
+        SnackBar(
+          content: Row(
+            children: const [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 10),
+              Text('Record saved successfully'),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
       );
     }
   }
