@@ -330,6 +330,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
               ),
               TextButton(
                 onPressed: () {
+                  Get.toNamed("/viewpat");
                   // Navigate to all patients screen
                 },
                 child: Text(

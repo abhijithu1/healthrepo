@@ -508,21 +508,9 @@ class PatientProfileScreen extends StatelessWidget {
                 // Alternative: If you need to keep the GIF, use a StatefulBuilder with SingleTickerProviderStateMixin
                 // See implementation notes below
               } else if (snapshot.hasError) {
-                return Center(
-                  child: Image.asset(
-                    'assets/loadgif.gif', // Ensure you have a loading GIF in assets
-                    width: 100,
-                    height: 100,
-                  ),
-                );
+                return Center(child: Text("No Records"));
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(
-                  child: Image.asset(
-                    'assets/loadgif.gif', // Ensure you have a loading GIF in assets
-                    width: 100,
-                    height: 100,
-                  ),
-                );
+                return Center(child: Text("No Records"));
               } else {
                 final records = snapshot.data!;
                 return ExpansionTile(

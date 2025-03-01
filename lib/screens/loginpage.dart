@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:helthrepov1/controllers/authctrl.dart';
+import 'package:helthrepov1/screens/dashb.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -215,7 +216,7 @@ class _LoginPageState extends State<LoginPage> {
                             final token = await lgn.box.read("token");
                             debugPrint("Pass2: $token");
                             if (token != null) {
-                              Get.toNamed("/dash");
+                              Get.offAll(() => DashBoard());
                             }
                           },
                           style: ElevatedButton.styleFrom(
