@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:helthrepov1/controllers/dashctrl.dart';
+import 'package:helthrepov1/controllers/profilectrl.dart';
 import 'package:helthrepov1/controllers/viewrecctrl.dart';
 
 class PatientListScreen extends StatelessWidget {
@@ -55,11 +56,29 @@ class PatientListScreen extends StatelessWidget {
               future: dsb.getPatients(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(
+                    child: Image.asset(
+                      'assets/loadgif.gif', // Ensure you have a loading GIF in assets
+                      width: 100,
+                      height: 100,
+                    ),
+                  );
                 } else if (snapshot.hasError) {
-                  return Center(child: Text("Error: ${snapshot.error}"));
+                  return Center(
+                    child: Image.asset(
+                      'assets/loadgif.gif', // Ensure you have a loading GIF in assets
+                      width: 100,
+                      height: 100,
+                    ),
+                  );
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text("No patients available"));
+                  return Center(
+                    child: Image.asset(
+                      'assets/loadgif.gif', // Ensure you have a loading GIF in assets
+                      width: 100,
+                      height: 100,
+                    ),
+                  );
                 }
 
                 final patients = _filterPatients(
@@ -83,7 +102,10 @@ class PatientListScreen extends StatelessWidget {
                         final vrcc = Get.find<ViewRecController>();
                         vrcc.id.value = patient['id'];
                         vrcc.name.value = patient['name'];
-                        Get.toNamed("/viewrec");
+                        final plc = Get.find<ProfileController>();
+                        plc.id.value = patient['id'];
+                        plc.name.value = patient['name'];
+                        Get.toNamed("/pp");
                       },
                       child: Card(
                         elevation: 4,

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:get/get.dart';
+import 'package:gif/gif.dart';
 import 'package:helthrepov1/controllers/profilectrl.dart';
+import 'package:helthrepov1/controllers/viewrecctrl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PatientProfile extends StatelessWidget {
   const PatientProfile({Key? key}) : super(key: key);
@@ -22,21 +25,13 @@ class PatientProfile extends StatelessWidget {
   }
 }
 
-class PatientProfileScreen extends StatefulWidget {
+class PatientProfileScreen extends StatelessWidget {
   const PatientProfileScreen({Key? key}) : super(key: key);
 
   @override
-  State<PatientProfileScreen> createState() => _PatientProfileScreenState();
-}
-
-class _PatientProfileScreenState extends State<PatientProfileScreen> {
-  bool _pastVisitsExpanded = true;
-  bool _diagnosesExpanded = false;
-  bool _treatmentsExpanded = false;
-  bool _medicationsExpanded = false;
-
-  @override
   Widget build(BuildContext context) {
+    final ViewRecController viewRecController = Get.put(ViewRecController());
+
     return Scaffold(
       body: SafeArea(
         child: CustomScrollView(
@@ -48,11 +43,13 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: VitalSignsSummary(),
                 ),
+                _buildViewRecordsSection(viewRecController),
                 _buildMedicalHistorySection(),
                 _buildChronicConditionSection(),
                 _buildAllergiesSection(),
                 _buildEmergencyContactsSection(),
                 _buildNotesSection(),
+
                 const SizedBox(height: 80), // Space for FAB
               ]),
             ),
@@ -79,17 +76,9 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // Past Visits
-          _buildExpandableSection(
+          _buildExpandableTile(
             title: 'Past Visits',
             icon: Icons.event_note,
-            isExpanded: _pastVisitsExpanded,
-            onTap: () {
-              setState(() {
-                _pastVisitsExpanded = !_pastVisitsExpanded;
-              });
-            },
             children: [
               _buildVisitCard(
                 date: '15 Oct 2023',
@@ -114,25 +103,16 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                   onPressed: () {},
                   child: Text(
                     'View More',
-                    style: TextStyle(color: Theme.of(context).primaryColor),
+                    style: TextStyle(color: Color.fromARGB(17, 134, 178, 222)),
                   ),
                 ),
               ),
             ],
           ),
-
           const SizedBox(height: 16),
-
-          // Diagnoses
-          _buildExpandableSection(
+          _buildExpandableTile(
             title: 'Diagnoses',
             icon: Icons.medical_services,
-            isExpanded: _diagnosesExpanded,
-            onTap: () {
-              setState(() {
-                _diagnosesExpanded = !_diagnosesExpanded;
-              });
-            },
             children: [
               _buildDiagnosisCard(
                 condition: 'Type 2 Diabetes',
@@ -154,19 +134,10 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 16),
-
-          // Treatments
-          _buildExpandableSection(
+          _buildExpandableTile(
             title: 'Treatments',
             icon: Icons.healing,
-            isExpanded: _treatmentsExpanded,
-            onTap: () {
-              setState(() {
-                _treatmentsExpanded = !_treatmentsExpanded;
-              });
-            },
             children: [
               _buildTreatmentCard(
                 treatment: 'Insulin Therapy',
@@ -182,19 +153,10 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 16),
-
-          // Medications
-          _buildExpandableSection(
+          _buildExpandableTile(
             title: 'Medications',
             icon: Icons.medication,
-            isExpanded: _medicationsExpanded,
-            onTap: () {
-              setState(() {
-                _medicationsExpanded = !_medicationsExpanded;
-              });
-            },
             children: [
               _buildMedicationCard(
                 medication: 'Metformin',
@@ -214,6 +176,25 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildExpandableTile({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ExpansionTile(
+        leading: Icon(icon, color: Color.fromARGB(255, 108, 254, 227)),
+        title: Text(
+          title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        children: children,
       ),
     );
   }
@@ -484,12 +465,172 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     );
   }
 
+  // View Records Section
+  Widget _buildViewRecordsSection(ViewRecController viewRecController) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text(
+                'View Records',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF202124),
+                ),
+              ),
+              SizedBox(width: 6),
+              IconButton(
+                icon: Icon(Icons.add),
+                onPressed: () {
+                  Get.toNamed("/anrc");
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          FutureBuilder<List<dynamic>>(
+            future: viewRecController.getRecords(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                // Replace the GifController implementation with a simple loading indicator
+                return Center(
+                  child: Image.asset(
+                    'assets/loadgif.gif', // Ensure you have a loading GIF in assets
+                    width: 100,
+                    height: 100,
+                  ),
+                );
+
+                // Alternative: If you need to keep the GIF, use a StatefulBuilder with SingleTickerProviderStateMixin
+                // See implementation notes below
+              } else if (snapshot.hasError) {
+                return Center(
+                  child: Image.asset(
+                    'assets/loadgif.gif', // Ensure you have a loading GIF in assets
+                    width: 100,
+                    height: 100,
+                  ),
+                );
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return Center(
+                  child: Image.asset(
+                    'assets/loadgif.gif', // Ensure you have a loading GIF in assets
+                    width: 100,
+                    height: 100,
+                  ),
+                );
+              } else {
+                final records = snapshot.data!;
+                return ExpansionTile(
+                  leading: Icon(
+                    Icons.folder,
+                    color: Color.fromARGB(255, 90, 193, 248),
+                  ),
+                  title: Text(
+                    'Medical Records',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF202124),
+                    ),
+                  ),
+                  children:
+                      records.map((record) {
+                        return Card(
+                          elevation: 2,
+                          margin: const EdgeInsets.only(bottom: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.description,
+                                      color: Color.fromARGB(255, 90, 193, 248),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      record['name'],
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Date: ${record['date']}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Summary: ${record['summary']}',
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                                const SizedBox(height: 12),
+                                if (record['details'] != null)
+                                  Text(
+                                    'Details: ${record['details']}',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey.shade700,
+                                    ),
+                                  ),
+                                SizedBox(height: 5),
+                                TextButton(
+                                  onPressed: () async {
+                                    // Download functionality will be implemented later
+                                    Uri uri = Uri.parse(record['url']);
+                                    if (await canLaunchUrl(uri)) {
+                                      await launchUrl(
+                                        uri,
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                    } else {
+                                      print(
+                                        'Could not launch ${record['url']}',
+                                      );
+                                    }
+                                  },
+                                  child: const Row(
+                                    children: [
+                                      Icon(Icons.download, size: 16),
+                                      SizedBox(width: 4),
+                                      Text("Download"),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                );
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   // Helper widgets
   Widget _buildExpandableSection({
     required String title,
     required IconData icon,
-    required bool isExpanded,
-    required VoidCallback onTap,
     required List<Widget> children,
   }) {
     return Card(
@@ -497,39 +638,29 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Column(
         children: [
-          InkWell(
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Icon(icon, color: Theme.of(context).primaryColor),
-                  const SizedBox(width: 16),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Icon(icon, color: Color.fromARGB(255, 108, 254, 227)),
+                const SizedBox(width: 16),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const Spacer(),
-                  Icon(
-                    isExpanded
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          if (isExpanded)
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0,
-              ),
-              child: Column(children: children),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
             ),
+            child: Column(children: children),
+          ),
         ],
       ),
     );
@@ -565,7 +696,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                     reason,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Theme.of(context).primaryColor,
+                      color: Color.fromARGB(255, 90, 193, 248),
                     ),
                   ),
                 ),
@@ -592,7 +723,10 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
         padding: const EdgeInsets.all(12.0),
         child: Row(
           children: [
-            Icon(Icons.local_hospital, color: Theme.of(context).primaryColor),
+            Icon(
+              Icons.local_hospital,
+              color: Color.fromARGB(255, 90, 193, 248),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -646,7 +780,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
         padding: const EdgeInsets.all(12.0),
         child: Row(
           children: [
-            Icon(Icons.healing, color: Theme.of(context).primaryColor),
+            Icon(Icons.healing, color: Color.fromARGB(255, 90, 193, 248)),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -699,7 +833,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
         padding: const EdgeInsets.all(12.0),
         child: Row(
           children: [
-            Icon(Icons.medication, color: Theme.of(context).primaryColor),
+            Icon(Icons.medication, color: Color.fromARGB(255, 90, 193, 248)),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -798,8 +932,8 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
-            child: Icon(Icons.person, color: Theme.of(context).primaryColor),
+            backgroundColor: Color.fromARGB(255, 90, 193, 248).withOpacity(0.2),
+            child: Icon(Icons.person, color: Color.fromARGB(255, 90, 193, 248)),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -1126,7 +1260,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
         debugPrint("pressed");
         Get.toNamed("/anrc");
       },
-      backgroundColor: Theme.of(context).primaryColor,
+      backgroundColor: Color.fromARGB(255, 90, 193, 248),
       child: const Icon(Icons.add, color: Colors.white),
     );
   }

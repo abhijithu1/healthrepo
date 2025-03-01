@@ -36,7 +36,7 @@ class ViewRecordsScreen extends StatelessWidget {
               // Add functionality to navigate to the screen where you can add new records
               // For example:
               // Get.to(AddRecordScreen());
-              Get.toNamed("/chat");
+              Get.toNamed("/anrc");
             },
           ),
         ],
@@ -145,11 +145,29 @@ class ViewRecordsScreen extends StatelessWidget {
                   future: vrcc.getRecords(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
+                      return Center(
+                        child: Image.asset(
+                          'assets/loadgif.gif', // Ensure you have a loading GIF in assets
+                          width: 100,
+                          height: 100,
+                        ),
+                      );
                     } else if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
+                      return Center(
+                        child: Image.asset(
+                          'assets/loadgif.gif', // Ensure you have a loading GIF in assets
+                          width: 100,
+                          height: 100,
+                        ),
+                      );
                     } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(child: Text('No patients found.'));
+                      return Center(
+                        child: Image.asset(
+                          'assets/loadgif.gif', // Ensure you have a loading GIF in assets
+                          width: 100,
+                          height: 100,
+                        ),
+                      );
                     } else {
                       final recordlist = snapshot.data!;
                       return ListView.builder(
@@ -474,11 +492,29 @@ class SearchScreen extends StatelessWidget {
                 future: dsb.getPatients(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+                    return Center(
+                      child: Image.asset(
+                        'assets/loadgif.gif', // Ensure you have a loading GIF in assets
+                        width: 100,
+                        height: 100,
+                      ),
+                    );
                   } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
+                    return Center(
+                      child: Image.asset(
+                        'assets/loadgif.gif', // Ensure you have a loading GIF in assets
+                        width: 100,
+                        height: 100,
+                      ),
+                    );
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('No patients found.'));
+                    return Center(
+                      child: Image.asset(
+                        'assets/loadgif.gif', // Ensure you have a loading GIF in assets
+                        width: 100,
+                        height: 100,
+                      ),
+                    );
                   } else {
                     final patientList = snapshot.data!;
                     return Obx(() {
